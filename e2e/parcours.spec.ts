@@ -55,7 +55,7 @@ test('une séance complète, de la création de la classe à l’export', async 
   await expect(page.getByRole('button', { name: /AMRANI Yassine/ }).getByLabel('Absent')).toBeVisible();
   for (let i = 1; i <= 5; i++) {
     await page.getByRole('button', { name: /BENNANI Salma/ }).click();
-    await page.getByRole('button', { name: /Bavardage/ }).click();
+    await page.getByRole('button', { name: /^Bavardage/ }).click();
     await expect(page.getByRole('button', { name: /BENNANI Salma/ }).getByLabel(`Discipline −${i}`)).toBeVisible();
   }
 
