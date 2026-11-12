@@ -3,6 +3,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 type Mode = 'connexion' | 'creation' | 'oubli';
 
+/** Adresse complète de l'application : les liens des e-mails de Supabase doivent y ramener, sous-dossier compris. */
+const adresseAppli = `${window.location.origin}${import.meta.env.BASE_URL}`;
+
 export default function Connexion({ client, retourPossible }: { client: SupabaseClient; retourPossible?: boolean }) {
   const [mode, setMode] = useState<Mode>('connexion');
   const [email, setEmail] = useState('');
@@ -16,8 +19,8 @@ export default function Connexion({ client, retourPossible }: { client: Supabase
     setErreur(''); setMessage(''); setOccupe(true);
     const resultat =
       mode === 'connexion' ? await client.auth.signInWithPassword({ email, password: motDePasse })
-      : mode === 'creation' ? await client.auth.signUp({ email, password: motDePasse })
-      : await client.auth.resetPasswordForEmail(email);
+      : mode === 'creation' ? await client.auth.signUp({ email, password: motDePasse, options: { emailRedirectTo: adresseAppli } })
+      : await client.auth.resetPasswordForEmail(email, { redirectTo: adresseAppli });
     setOccupe(false);
     if (resultat.error) {
       setErreur(mode === 'connexion' ? 'E-mail ou mot de passe incorrect.' : `Impossible : ${resultat.error.message}`);
