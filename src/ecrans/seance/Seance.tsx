@@ -5,11 +5,14 @@ import type { Classe, Critere, Eleve, Observation, Seance as S, TypeObservation 
 import { ecrireMeta, lireMeta } from '../../stockage/depot';
 import { useLigne, useListe } from '../../stockage/hooks';
 import { annulerDerniereAction, basculerPresence, marquerPresence, observer } from './actions';
+import BandeauVoix from './BandeauVoix';
+import BoutonMicro from './BoutonMicro';
 import ListeEleves from './ListeEleves';
 import { parEleve } from './marques';
 import NouvelleObservation from './NouvelleObservation';
 import PanneauObservations from './PanneauObservations';
 import PlanEleves from './PlanEleves';
+import { useVoix } from './useVoix';
 
 export default function Seance() {
   const { id: seanceId = '' } = useParams();
@@ -39,6 +42,7 @@ export default function Seance() {
 
   const tries = useMemo(() => [...(eleves ?? [])].sort((a, b) => a.numero - b.numero), [eleves]);
   const obsParEleve = useMemo(() => parEleve(observations ?? []), [observations]);
+  const voix = useVoix(seanceId, tries, types ?? []);
 
   if (seance === null) return (<><EnTete titre="Séance introuvable" retour="/" /><p className="vide">Cette séance n’existe plus.</p></>);
 
@@ -97,9 +101,15 @@ export default function Seance() {
 
       <div className="barre-seance">
         <button type="button" className="bouton" disabled={!observations?.length} onClick={() => annulerDerniereAction(seanceId)}>Annuler</button>
-        <span className="etire" style={{ flex: 1 }} />
+        <span style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+          <BoutonMicro onTextes={voix.surTextes} onErreur={voix.surErreur} />
+        </span>
         <Link className="bouton primaire" to={`/seance/${seanceId}/resume`}>Terminer la séance</Link>
       </div>
+
+      {voix.etat && !cibles && (
+        <BandeauVoix etat={voix.etat} onAnnuler={voix.annuler} onChoisirEleve={voix.choisirEleve} onChoisirType={voix.choisirType} onFermer={voix.fermer} />
+      )}
 
       {cibles && !autre && (
         <PanneauObservations

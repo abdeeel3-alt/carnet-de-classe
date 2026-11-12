@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import EnTete from '../../composants/EnTete';
 import Feuille from '../../composants/Feuille';
@@ -10,11 +10,12 @@ import { CRITERES, NOM_CRITERE, type Attribution, type Eleve } from '../../domai
 import { enregistrer, modifier } from '../../stockage/depot';
 import { useParametres } from '../../stockage/hooks';
 import '../../impression.css';
+import BoutonMicro from '../seance/BoutonMicro';
 import { donneesFiche } from './donneesFiche';
 
 const jour = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-export default function FicheEleve({ dictee }: { dictee?: (ecrire: (texte: string) => void) => ReactNode }) {
+export default function FicheEleve() {
   const { id: eleveId = '' } = useParams();
   const p = useParametres();
   const [choix, setChoix] = useState<ChoixPeriode | null>(null);
@@ -100,7 +101,10 @@ export default function FicheEleve({ dictee }: { dictee?: (ecrire: (texte: strin
           <textarea key={eleve.updated_at} defaultValue={eleve.remarques}
             onBlur={(e) => e.target.value !== eleve.remarques && modifier<Eleve>('eleves', eleve.id, { remarques: e.target.value })} />
         </label>
-        {dictee?.((texte) => modifier<Eleve>('eleves', eleve.id, { remarques: [eleve.remarques, texte].filter(Boolean).join(' ') }))}
+        <span className="sans-impression">
+          <BoutonMicro petit libelle="Dicter une remarque" onErreur={() => {}}
+            onTextes={([texte]) => modifier<Eleve>('eleves', eleve.id, { remarques: [eleve.remarques, texte].filter(Boolean).join(' ') })} />
+        </span>
       </div>
 
       {attribution && (
