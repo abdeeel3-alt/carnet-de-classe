@@ -67,7 +67,7 @@ create table parametres (
 );
 
 -- À chaque écriture : on garde la ligne la plus récente et on date la synchronisation.
-create function garder_la_plus_recente() returns trigger language plpgsql as $$
+create function garder_la_plus_recente() returns trigger language plpgsql set search_path = '' as $$
 begin
   if tg_op = 'UPDATE' and new.updated_at <= old.updated_at then
     return null;

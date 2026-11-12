@@ -50,7 +50,7 @@ export default function Connexion({ client, retourPossible }: { client: Supabase
         {mode !== 'connexion' && <button type="button" className="bouton discret" onClick={() => setMode('connexion')}>J’ai déjà un compte</button>}
         {mode !== 'creation' && <button type="button" className="bouton discret" onClick={() => setMode('creation')}>Créer un compte</button>}
         {mode === 'connexion' && <button type="button" className="bouton discret" onClick={() => setMode('oubli')}>Mot de passe oublié</button>}
-        {retourPossible && <a className="bouton discret" href="/">Continuer sans connexion</a>}
+        {retourPossible && <a className="bouton discret" href={import.meta.env.BASE_URL}>Continuer sans connexion</a>}
       </div>
     </div>
   );

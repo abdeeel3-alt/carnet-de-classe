@@ -45,11 +45,9 @@ Chaque ligne appartient à un compte ; la sécurité au niveau des lignes interd
 
 ## Mettre en ligne
 
-```bash
-npm run build
-```
+À chaque envoi sur la branche `main`, `.github/workflows/deploiement.yml` teste, construit et publie l'application sur GitHub Pages, à l'adresse https://abdeeel3-alt.github.io/carnet-de-classe/. Il faut activer une fois GitHub Pages dans le dépôt : Settings › Pages › Source : **GitHub Actions**.
 
-Le dossier `dist` est un site statique. `vercel.json` contient la règle de réécriture nécessaire aux adresses de l'application. Les deux variables `VITE_SUPABASE_*` doivent être renseignées chez l'hébergeur avant la construction.
+Pour un autre hébergeur : `npm run build` produit le site statique dans `dist` ; `vercel.json` contient la règle de réécriture, et les deux variables `VITE_SUPABASE_*` doivent être renseignées avant la construction.
 
 ## Organisation du code
 

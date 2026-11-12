@@ -21,7 +21,7 @@ export default function Reglages() {
     if (enAttente && !window.confirm(`${enAttente} changement(s) ne sont pas encore synchronisés et seront perdus. Se déconnecter quand même ?`)) return;
     await client!.auth.signOut();
     await viderBase();
-    window.location.assign('/');
+    window.location.assign(import.meta.env.BASE_URL);
   }
   return (
     <>
@@ -43,7 +43,7 @@ export default function Reglages() {
         {synchro.etat === 'deconnecte' && (
           <div className="carte">
             <p>Vous n’êtes pas connecté : vos saisies sont enregistrées sur cet appareil et partiront après la reconnexion.</p>
-            <a className="bouton primaire" href="/?connexion">Se reconnecter</a>
+            <a className="bouton primaire" href={`${import.meta.env.BASE_URL}?connexion`}>Se reconnecter</a>
           </div>
         )}
         {client

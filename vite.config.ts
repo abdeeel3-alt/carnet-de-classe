@@ -3,7 +3,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+/** Sous-dossier où l'application est servie (« /carnet-de-classe/ » sur GitHub Pages, « / » ailleurs). */
+const base = process.env.BASE ?? '/';
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -15,7 +19,8 @@ export default defineConfig({
         description: 'Suivi de la vie de classe',
         lang: 'fr',
         display: 'standalone',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         background_color: '#f8fafc',
         theme_color: '#1e3a8a',
         icons: [
@@ -23,7 +28,7 @@ export default defineConfig({
           { src: 'icone-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,png,svg,woff2}'], navigateFallback: '/index.html' },
+      workbox: { globPatterns: ['**/*.{js,css,html,png,svg,woff2}'], navigateFallback: `${base}index.html` },
     }),
   ],
   test: {

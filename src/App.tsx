@@ -88,7 +88,7 @@ export default function App() {
   if (etat === 'chargement') return <p className="vide">Chargement…</p>;
   if (etat === 'deconnecte') return <div className="appli"><Connexion client={client!} retourPossible={dejaUtilise} /></div>;
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <div className="appli"><Ecrans /></div>
     </BrowserRouter>
   );
