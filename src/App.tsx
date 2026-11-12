@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
 import BarreNavigation from './composants/BarreNavigation';
+import Accueil from './ecrans/Accueil';
 import Connexion from './ecrans/Connexion';
+import EmploiDuTemps from './ecrans/EmploiDuTemps';
 import Classes from './ecrans/reglages/Classes';
 import Eleves from './ecrans/reglages/Eleves';
 import ImportEleves from './ecrans/reglages/ImportEleves';
@@ -19,6 +21,8 @@ export function Ecrans() {
   return (
     <Routes>
       <Route element={<AvecBarre />}>
+        <Route path="/" element={<Accueil />} />
+        <Route path="/emploi-du-temps" element={<EmploiDuTemps />} />
         <Route path="/reglages" element={<Reglages />} />
       </Route>
       <Route path="/reglages/classes" element={<Classes />} />
