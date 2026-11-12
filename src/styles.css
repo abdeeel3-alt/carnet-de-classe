@@ -47,7 +47,7 @@ ul { list-style: none; margin: 0; padding: 0; }
 
 /* Barre du bas */
 .barre { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; background: var(--surface); border-top: 1px solid var(--bord); padding-bottom: env(safe-area-inset-bottom); }
-.barre a { flex: 1; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 0.72rem; color: var(--texte-doux); }
+.barre a { flex: 1; min-height: 60px; text-align: center; line-height: 1.15; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 0.72rem; color: var(--texte-doux); }
 .barre a .pictogramme { font-size: 1.35rem; line-height: 1; }
 .barre a.active { color: var(--primaire); font-weight: 650; }
 
