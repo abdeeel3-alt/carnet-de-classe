@@ -4,6 +4,7 @@ import BarreNavigation from './composants/BarreNavigation';
 import Accueil from './ecrans/Accueil';
 import Connexion from './ecrans/Connexion';
 import EmploiDuTemps from './ecrans/EmploiDuTemps';
+import Exports from './ecrans/Exports';
 import Catalogue from './ecrans/reglages/Catalogue';
 import Classes from './ecrans/reglages/Classes';
 import Eleves from './ecrans/reglages/Eleves';
@@ -29,6 +30,7 @@ export function Ecrans() {
       <Route element={<AvecBarre />}>
         <Route path="/" element={<Accueil />} />
         <Route path="/emploi-du-temps" element={<EmploiDuTemps />} />
+        <Route path="/exports" element={<Exports />} />
         <Route path="/reglages" element={<Reglages />} />
       </Route>
       <Route path="/seance/:id" element={<Seance />} />
