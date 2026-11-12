@@ -8,6 +8,8 @@ export default function IndicateurSynchro() {
     synchronise: '✓ Synchronisé',
     en_attente: `↻ ${enAttente} en attente`,
     hors_ligne: enAttente ? `Hors ligne · ${enAttente} en attente` : 'Hors ligne',
+    erreur: `⚠ Erreur de synchro${enAttente ? ` · ${enAttente} en attente` : ''}`,
+    deconnecte: enAttente ? `Non connecté · ${enAttente} en attente` : 'Non connecté',
   }[etat];
   return <span className="synchro" role="status">{texte}</span>;
 }

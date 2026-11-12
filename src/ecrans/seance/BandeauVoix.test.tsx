@@ -101,3 +101,26 @@ test('une observation ajoutée après le début de l’écoute est comprise', as
   dire('Salma chewing-gum');
   expect(await screen.findByRole('status', { name: 'Commande vocale' })).toHaveTextContent('BENNANI Salma : Chewing-gum');
 });
+
+test('la première transcription comprise l’emporte, même si elle demande une précision', async () => {
+  afficher();
+  await parler('Yassine bavardage', 'Salma bavardage');
+  const bandeau = await screen.findByRole('status', { name: 'Commande vocale' });
+  expect(within(bandeau).getByRole('button', { name: '17 · AMRANI Yassine' })).toBeInTheDocument();
+  expect(await observations()).toEqual([]);
+});
+
+test('un prénom approchant demande confirmation avant d’enregistrer', async () => {
+  afficher();
+  await parler('Selma bavardage');
+  const bandeau = await screen.findByRole('status', { name: 'Commande vocale' });
+  expect(await observations()).toEqual([]);
+  await userEvent.click(within(bandeau).getByRole('button', { name: '12 · BENNANI Salma' }));
+  await waitFor(async () => expect(await observations()).toHaveLength(1));
+});
+
+test('les mots ignorés sont annoncés', async () => {
+  afficher();
+  await parler('Salma et Jasmin bavardage');
+  expect(await screen.findByRole('status', { name: 'Commande vocale' })).toHaveTextContent('BENNANI Salma : Bavardage · ignoré : jasmin');
+});

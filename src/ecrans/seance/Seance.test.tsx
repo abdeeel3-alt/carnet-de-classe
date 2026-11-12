@@ -91,3 +91,15 @@ test('Absent est un interrupteur pour un élève seul', async () => {
   await u.click(screen.getByRole('button', { name: /^Absent/ }));
   await waitFor(async () => expect(await observations()).toEqual([]));
 });
+
+test('retirer une observation précise de la séance, sans toucher aux suivantes', async () => {
+  const u = userEvent.setup();
+  afficher();
+  for (const quoi of [/Manque de respect/, /Bavardage/, /Bonne participation/]) {
+    await u.click(await ligne('BENNANI'));
+    await u.click(screen.getByRole('button', { name: quoi }));
+  }
+  await u.click(await ligne('BENNANI'));
+  await u.click(await screen.findByRole('button', { name: 'Retirer Manque de respect' }));
+  await waitFor(async () => expect((await observations()).map((o) => o.libelle).sort()).toEqual(['Bavardage', 'Bonne participation']));
+});

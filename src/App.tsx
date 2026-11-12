@@ -18,7 +18,8 @@ import Seance from './ecrans/seance/Seance';
 import FicheEleve from './ecrans/eleve/FicheEleve';
 import { ecrireMeta, initialiser, lireMeta, viderBase } from './stockage/depot';
 import { client, distantSupabase } from './stockage/distant';
-import { demarrerSynchro } from './stockage/synchro';
+import { connexionDemandee, ecranDeDemarrage } from './stockage/session';
+import { demarrerSynchro, signalerDeconnexion } from './stockage/synchro';
 
 function AvecBarre() {
   return (<><Outlet /><BarreNavigation /></>);
@@ -51,6 +52,7 @@ type Etat = 'chargement' | 'deconnecte' | 'pret';
 
 export default function App() {
   const [etat, setEtat] = useState<Etat>('chargement');
+  const [dejaUtilise, setDejaUtilise] = useState(false);
 
   useEffect(() => {
     let arreter = () => {};
@@ -68,15 +70,23 @@ export default function App() {
       setEtat('pret');
     }
     if (!client) { demarrer(null); return () => { annule = true; arreter(); }; }
-    const { data } = client.auth.onAuthStateChange((_evenement, session) => {
-      if (session) demarrer(session.user.id);
-      else { arreter(); arreter = () => {}; setEtat('deconnecte'); }
+    const { data } = client.auth.onAuthStateChange(async (_evenement, session) => {
+      if (session) { demarrer(session.user.id); return; }
+      // Pas de session : jeton expiré sans réseau, ou vraie déconnexion. Les données locales restent utilisables.
+      arreter(); arreter = () => {};
+      const local = await lireMeta('utilisateur');
+      if (annule) return;
+      setDejaUtilise(!!local);
+      if (ecranDeDemarrage(local, null, connexionDemandee()).ecran === 'connexion') { setEtat('deconnecte'); return; }
+      await initialiser();
+      await signalerDeconnexion();
+      if (!annule) setEtat('pret');
     });
     return () => { annule = true; data.subscription.unsubscribe(); arreter(); };
   }, []);
 
   if (etat === 'chargement') return <p className="vide">Chargement…</p>;
-  if (etat === 'deconnecte') return <div className="appli"><Connexion client={client!} /></div>;
+  if (etat === 'deconnecte') return <div className="appli"><Connexion client={client!} retourPossible={dejaUtilise} /></div>;
   return (
     <BrowserRouter>
       <div className="appli"><Ecrans /></div>

@@ -4,26 +4,41 @@ import { base } from './base';
 import { abonnerEcritures, ecrireMeta, lireMeta } from './depot';
 import type { Distant } from './distant';
 
-export type EtatSynchro = { etat: 'local' | 'synchronise' | 'en_attente' | 'hors_ligne'; enAttente: number };
+export type EtatSynchro = { etat: 'local' | 'synchronise' | 'en_attente' | 'hors_ligne' | 'erreur' | 'deconnecte'; enAttente: number; message?: string };
 
 let etat: EtatSynchro = { etat: 'local', enAttente: 0 };
 const ecouteurs = new Set<() => void>();
 function publier(suivant: EtatSynchro) {
-  if (suivant.etat === etat.etat && suivant.enAttente === etat.enAttente) return;
+  if (suivant.etat === etat.etat && suivant.enAttente === etat.enAttente && suivant.message === etat.message) return;
   etat = suivant;
   ecouteurs.forEach((e) => e());
+}
+export const lireEtatSynchro = (): EtatSynchro => etat;
+/** L'application est ouverte sur les données locales, sans session : rien ne part tant qu'on ne s'est pas reconnecté. */
+export async function signalerDeconnexion(): Promise<void> {
+  publier({ etat: 'deconnecte', enAttente: await base.file_attente.count() });
 }
 export function useEtatSynchro(): EtatSynchro {
   return useSyncExternalStore((e) => { ecouteurs.add(e); return () => ecouteurs.delete(e); }, () => etat);
 }
 
-async function pousser(distant: Distant): Promise<void> {
+/** Une panne de réseau n'est pas une erreur : la file attend simplement le retour de la connexion. */
+function estPanneReseau(e: unknown): boolean {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return true;
+  if (e instanceof TypeError) return true;
+  return /fetch|network|réseau|hors ligne|timeout|timed out/i.test(e instanceof Error ? e.message : String(e));
+}
+const messageDe = (e: unknown) => (e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e));
+
+/** Envoie table par table. Un refus sur une table n'empêche pas les autres ; les erreurs sont rendues à l'appelant. */
+async function pousser(distant: Distant): Promise<unknown[]> {
+  const erreurs: unknown[] = [];
   const file = await base.file_attente.toArray();
   for (const table of TABLES) {
     const entrees = file.filter((f) => f.table === table);
     if (!entrees.length) continue;
     const lignes = ((await base[table].bulkGet(entrees.map((f) => f.id))) as (Base | undefined)[]).filter((l): l is Base => !!l);
-    await distant.pousser(table, lignes);
+    try { await distant.pousser(table, lignes); } catch (e) { erreurs.push(e); if (estPanneReseau(e)) return erreurs; continue; }
     // On ne retire de la file que les lignes restées telles qu'envoyées.
     await base.transaction('rw', base[table], base.file_attente, async () => {
       for (const envoyee of lignes) {
@@ -34,6 +49,7 @@ async function pousser(distant: Distant): Promise<void> {
       await base.file_attente.bulkDelete(orphelines.map((f) => f.cle));
     });
   }
+  return erreurs;
 }
 
 async function tirer(distant: Distant): Promise<void> {
@@ -55,16 +71,22 @@ async function appliquer(table: NomTable, lignes: Base[]): Promise<void> {
   });
 }
 
-/** Pousse puis tire. Ne lève jamais : un échec réseau laisse la file intacte et l'état « hors ligne ». */
+/**
+ * Pousse puis tire. Ne lève jamais. Une panne de réseau laisse la file intacte et l'état « hors ligne » ;
+ * un refus du serveur est signalé comme une erreur, avec son message, sans bloquer le reste.
+ */
 export async function synchroniser(distant: Distant): Promise<void> {
+  const erreurs: unknown[] = [];
   try {
-    await pousser(distant);
-    await tirer(distant);
-    const enAttente = await base.file_attente.count();
-    publier({ etat: enAttente ? 'en_attente' : 'synchronise', enAttente });
-  } catch {
-    publier({ etat: 'hors_ligne', enAttente: await base.file_attente.count() });
+    erreurs.push(...(await pousser(distant)));
+    if (!erreurs.some(estPanneReseau)) await tirer(distant);
+  } catch (e) {
+    erreurs.push(e);
   }
+  const enAttente = await base.file_attente.count();
+  if (erreurs.some(estPanneReseau)) publier({ etat: 'hors_ligne', enAttente });
+  else if (erreurs.length) publier({ etat: 'erreur', enAttente, message: messageDe(erreurs[0]) });
+  else publier({ etat: enAttente ? 'en_attente' : 'synchronise', enAttente });
 }
 
 /** Synchronise au démarrage, au retour du réseau, au retour sur l'application, 2 s après chaque écriture, et chaque minute. */
@@ -80,7 +102,7 @@ export function demarrerSynchro(distant: Distant | null): () => void {
     enCours = false;
   };
   const apresEcriture = () => {
-    base.file_attente.count().then((n) => publier({ etat: etat.etat === 'hors_ligne' ? 'hors_ligne' : 'en_attente', enAttente: n }));
+    base.file_attente.count().then((n) => publier(etat.etat === 'hors_ligne' || etat.etat === 'erreur' ? { ...etat, enAttente: n } : { etat: 'en_attente', enAttente: n }));
     clearTimeout(minuteur);
     minuteur = setTimeout(lancer, 2000);
   };

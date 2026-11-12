@@ -3,7 +3,7 @@ import type { Base, Classe, NomTable } from '../domaine/types';
 import { base } from './base';
 import { enregistrer, lireMeta, lister, obtenir, supprimer, viderBase } from './depot';
 import type { Distant } from './distant';
-import { synchroniser } from './synchro';
+import { lireEtatSynchro, synchroniser } from './synchro';
 
 /** Serveur factice : garde la ligne la plus récente et numérote les écritures pour le curseur. */
 function distantFactice() {
@@ -127,4 +127,37 @@ test('une ligne modifiée pendant l’envoi reste en file', async () => {
   expect(await base.file_attente.count()).toBe(1);
   await synchroniser(d.distant);
   expect(d.lire('classes', c.id)).toMatchObject({ nom: 'Modifiée entre-temps' });
+});
+
+test('un refus du serveur sur une table n’empêche ni les autres envois ni la réception, et il est signalé', async () => {
+  const d = distantFactice();
+  const c = await enregistrer<Classe>('classes', classe);
+  const e = await enregistrer('eleves', { classe_id: c.id, numero: 1, nom: 'ALAOUI', prenom: 'Sara', rangee: null, colonne: null, remarques: '' } as never);
+  d.ecrire('regles', { id: 'r-distante', updated_at: '2026-11-01T00:00:00.000Z', deleted: false });
+  const pousser = d.distant.pousser;
+  d.distant.pousser = async (t, lignes) => { if (t === 'classes') throw new Error('new row violates check constraint'); return pousser(t, lignes); };
+  await synchroniser(d.distant);
+  expect(d.lire('eleves', e.id)).toBeTruthy();
+  expect(await obtenir('regles', 'r-distante')).toBeTruthy();
+  expect(await base.file_attente.toArray()).toEqual([expect.objectContaining({ table: 'classes' })]);
+  expect(lireEtatSynchro()).toMatchObject({ etat: 'erreur', enAttente: 1 });
+  expect(lireEtatSynchro().message).toContain('check constraint');
+});
+test('une panne de réseau est annoncée comme « hors ligne », pas comme une erreur', async () => {
+  const d = distantFactice();
+  await enregistrer<Classe>('classes', classe);
+  d.distant.pousser = async () => { throw new TypeError('Failed to fetch'); };
+  d.distant.tirer = async () => { throw new TypeError('Failed to fetch'); };
+  await synchroniser(d.distant);
+  expect(lireEtatSynchro()).toMatchObject({ etat: 'hors_ligne', enAttente: 1 });
+});
+test('après une erreur corrigée, l’état redevient « synchronisé »', async () => {
+  const d = distantFactice();
+  await enregistrer<Classe>('classes', classe);
+  const pousser = d.distant.pousser;
+  d.distant.pousser = async () => { throw new Error('refus'); };
+  await synchroniser(d.distant);
+  d.distant.pousser = pousser;
+  await synchroniser(d.distant);
+  expect(lireEtatSynchro()).toEqual({ etat: 'synchronise', enAttente: 0 });
 });

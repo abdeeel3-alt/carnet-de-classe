@@ -4,6 +4,7 @@ import IndicateurSynchro from '../../composants/IndicateurSynchro';
 import { base } from '../../stockage/base';
 import { viderBase } from '../../stockage/depot';
 import { client } from '../../stockage/distant';
+import { useEtatSynchro } from '../../stockage/synchro';
 
 const LIENS = [
   { vers: '/reglages/classes', nom: 'Classes et élèves', detail: 'Listes, import, plan de classe' },
@@ -14,6 +15,7 @@ const LIENS = [
 ];
 
 export default function Reglages() {
+  const synchro = useEtatSynchro();
   async function seDeconnecter() {
     const enAttente = await base.file_attente.count();
     if (enAttente && !window.confirm(`${enAttente} changement(s) ne sont pas encore synchronisés et seront perdus. Se déconnecter quand même ?`)) return;
@@ -35,6 +37,15 @@ export default function Reglages() {
             </li>
           ))}
         </ul>
+        {synchro.etat === 'erreur' && (
+          <p className="erreur" role="alert">La synchronisation est refusée par le serveur : {synchro.message}. Vos données restent enregistrées sur cet appareil.</p>
+        )}
+        {synchro.etat === 'deconnecte' && (
+          <div className="carte">
+            <p>Vous n’êtes pas connecté : vos saisies sont enregistrées sur cet appareil et partiront après la reconnexion.</p>
+            <a className="bouton primaire" href="/?connexion">Se reconnecter</a>
+          </div>
+        )}
         {client
           ? <button type="button" className="bouton" onClick={seDeconnecter}>Se déconnecter</button>
           : <p className="info">Mode local : les données restent sur cet appareil, sans compte ni synchronisation.</p>}

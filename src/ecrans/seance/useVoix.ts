@@ -4,13 +4,16 @@ import { interpreter, type Resultat } from '../../voix/interpreteur';
 import { annulerDerniereAction, marquerPresence, observer } from './actions';
 import type { EtatVoix } from './BandeauVoix';
 
-/** Parmi les transcriptions possibles : la première comprise, sinon la première à préciser, sinon la première. */
+/**
+ * Parmi les transcriptions possibles, la plus probable qui a un sens. Une transcription moins probable
+ * ne passe jamais devant une plus probable qui demande seulement une précision.
+ */
 export function meilleure(alternatives: string[], eleves: Eleve[], types: TypeObservation[]): Resultat {
   const resultats = alternatives.map((a) => interpreter(a, eleves, types));
-  return resultats.find((r) => r.sorte === 'action') ?? resultats.find((r) => r.sorte === 'choix') ?? resultats[0] ?? { sorte: 'incompris', texte: '' };
+  return resultats.find((r) => r.sorte !== 'incompris') ?? resultats[0] ?? { sorte: 'incompris', texte: '' };
 }
 
-interface EnAttente { eleveIds: string[]; ambigus: { entendu: string; candidats: string[] }[]; types: string[] }
+interface EnAttente { eleveIds: string[]; ambigus: { entendu: string; candidats: string[] }[]; types: string[]; ignores: string[] }
 
 /** Relie les phrases dictées aux actions de la séance, en demandant de préciser quand il y a un doute. */
 export function useVoix(seanceId: string, elevesActuels: Eleve[], typesActuels: TypeObservation[]) {
@@ -28,7 +31,7 @@ export function useVoix(seanceId: string, elevesActuels: Eleve[], typesActuels: 
     if (e && duree) minuteur.current = setTimeout(() => setEtat(null), duree);
   };
 
-  async function appliquer(eleveIds: string[], typeId: string) {
+  async function appliquer(eleveIds: string[], typeId: string, ignores: string[]) {
     const { eleves, types } = donnees.current;
     const type = types.find((t) => t.id === typeId);
     if (!type || !eleveIds.length) return;
@@ -36,7 +39,8 @@ export function useVoix(seanceId: string, elevesActuels: Eleve[], typesActuels: 
     if (type.code) await marquerPresence(seanceId, eleveIds, type);
     else await observer(seanceId, eleveIds, type);
     const noms = eleveIds.map((id) => eleves.find((e) => e.id === id)).filter((e): e is Eleve => !!e).map((e) => `${e.nom} ${e.prenom}`);
-    afficher({ sorte: 'applique', texte: `${noms.join(', ')} : ${type.libelle}` }, 5000);
+    const reste = ignores.length ? ` · ignoré : ${ignores.join(', ')}` : '';
+    afficher({ sorte: 'applique', texte: `${noms.join(', ')} : ${type.libelle}${reste}` }, ignores.length ? 9000 : 5000);
   }
 
   /** Avance dans les précisions demandées, puis applique. */
@@ -51,7 +55,7 @@ export function useVoix(seanceId: string, elevesActuels: Eleve[], typesActuels: 
       afficher({ sorte: 'choix-type', candidats: types.filter((t) => a.types.includes(t.id)) });
     } else {
       enAttente.current = null;
-      appliquer(a.eleveIds, a.types[0]);
+      appliquer(a.eleveIds, a.types[0], a.ignores);
     }
   }
 
@@ -61,8 +65,8 @@ export function useVoix(seanceId: string, elevesActuels: Eleve[], typesActuels: 
       const r = meilleure(alternatives, donnees.current.eleves, donnees.current.types);
       enAttente.current = null;
       if (r.sorte === 'incompris') afficher({ sorte: 'message', texte: `Non compris : ${r.texte}` }, 6000);
-      else if (r.sorte === 'action') appliquer(r.eleveIds, r.typeId);
-      else { enAttente.current = { eleveIds: [...r.eleveIds], ambigus: [...r.eleves], types: [...r.types] }; poursuivre(); }
+      else if (r.sorte === 'action') appliquer(r.eleveIds, r.typeId, r.ignores);
+      else { enAttente.current = { eleveIds: [...r.eleveIds], ambigus: [...r.eleves], types: [...r.types], ignores: [...r.ignores] }; poursuivre(); }
     },
     surErreur: (message: string) => afficher({ sorte: 'message', texte: message }, 6000),
     choisirEleve(e: Eleve) {

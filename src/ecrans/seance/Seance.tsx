@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import EnTete from '../../composants/EnTete';
 import type { Classe, Critere, Eleve, Observation, Seance as S, TypeObservation } from '../../domaine/types';
-import { ecrireMeta, lireMeta } from '../../stockage/depot';
+import { signe } from '../../domaine/texte';
+import { ecrireMeta, lireMeta, supprimer } from '../../stockage/depot';
 import { useLigne, useListe } from '../../stockage/hooks';
 import { annulerDerniereAction, basculerPresence, marquerPresence, observer } from './actions';
 import BandeauVoix from './BandeauVoix';
@@ -118,7 +119,25 @@ export default function Seance() {
         <PanneauObservations
           titre={seul ? `${seul.numero} · ${seul.nom} ${seul.prenom}` : `${cibles.length} élèves`}
           types={types ?? []} presenceActive={presenceActive} onChoisir={choisir} onAutre={setAutre} onFermer={fermer}
-          pied={seul && <Link className="bouton discret" to={`/eleve/${seul.id}`}>Voir la fiche de l’élève</Link>}
+          pied={seul && (
+            <>
+              {(obsParEleve.get(seul.id) ?? []).length > 0 && (
+                <div className="groupe" role="group" aria-label="Saisies de cette séance">
+                  <h3 style={{ background: 'var(--texte)' }}>Saisies de cette séance</h3>
+                  <ul className="liste">
+                    {(obsParEleve.get(seul.id) ?? []).map((o) => (
+                      <li key={o.id} className="ligne" style={{ cursor: 'default', minHeight: 48 }}>
+                        <span className="principal"><strong>{o.libelle}</strong></span>
+                        {o.points !== 0 && <span className={`points ${o.points > 0 ? 'positif' : 'negatif'}`}>{signe(o.points)}</span>}
+                        <button type="button" className="bouton discret" style={{ color: 'var(--danger)' }} aria-label={`Retirer ${o.libelle}`} onClick={() => supprimer('observations', o.id)}>✕</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <Link className="bouton discret" to={`/eleve/${seul.id}`}>Voir la fiche de l’élève</Link>
+            </>
+          )}
         />
       )}
       {cibles && autre && (

@@ -68,3 +68,13 @@ test('les remarques sont enregistrées', async () => {
   await u.tab();
   await waitFor(async () => expect((await obtenir<Eleve>('eleves', eleveId))!.remarques).toBe('A besoin d’être devant.'));
 });
+
+test('supprimer une observation depuis la fiche', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  const u = userEvent.setup();
+  afficher();
+  expect(await screen.findByLabelText('Discipline : −3')).toBeInTheDocument();
+  await u.click(screen.getByRole('button', { name: 'Supprimer l’observation Perturbe le cours' }));
+  expect(await screen.findByLabelText('Discipline : −1')).toBeInTheDocument();
+  expect((await lister<Observation>('observations', { eleve_id: eleveId })).map((o) => o.libelle)).toEqual(['Bavardage']);
+});

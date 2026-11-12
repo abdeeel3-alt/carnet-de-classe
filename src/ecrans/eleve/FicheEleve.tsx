@@ -7,7 +7,7 @@ import SelecteurPeriode from '../../composants/SelecteurPeriode';
 import { clePeriode, libellePeriode, type ChoixPeriode } from '../../domaine/periodes';
 import { signe } from '../../domaine/texte';
 import { CRITERES, NOM_CRITERE, type Attribution, type Eleve } from '../../domaine/types';
-import { enregistrer, modifier } from '../../stockage/depot';
+import { enregistrer, modifier, supprimer } from '../../stockage/depot';
 import { useParametres } from '../../stockage/hooks';
 import '../../impression.css';
 import BoutonMicro from '../seance/BoutonMicro';
@@ -90,6 +90,9 @@ export default function FicheEleve() {
                 <span className={`pastille ${o.critere}`}>{NOM_CRITERE[o.critere].slice(0, 4)}</span>
                 <span className="principal"><strong>{o.libelle}</strong><span className="doux">{jour(o.horodatage)}</span></span>
                 {o.points !== 0 && <span className={`points ${o.points > 0 ? 'positif' : 'negatif'}`}>{signe(o.points)}</span>}
+                <button type="button" className="bouton discret sans-impression" style={{ color: 'var(--danger)', padding: '0 10px' }}
+                  aria-label={`Supprimer l’observation ${o.libelle}`}
+                  onClick={() => window.confirm(`Supprimer « ${o.libelle} » du ${jour(o.horodatage)} ?`) && supprimer('observations', o.id)}>✕</button>
               </li>
             ))}
           </ul>

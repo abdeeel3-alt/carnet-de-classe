@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 type Mode = 'connexion' | 'creation' | 'oubli';
 
-export default function Connexion({ client }: { client: SupabaseClient }) {
+export default function Connexion({ client, retourPossible }: { client: SupabaseClient; retourPossible?: boolean }) {
   const [mode, setMode] = useState<Mode>('connexion');
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
@@ -50,6 +50,7 @@ export default function Connexion({ client }: { client: SupabaseClient }) {
         {mode !== 'connexion' && <button type="button" className="bouton discret" onClick={() => setMode('connexion')}>J’ai déjà un compte</button>}
         {mode !== 'creation' && <button type="button" className="bouton discret" onClick={() => setMode('creation')}>Créer un compte</button>}
         {mode === 'connexion' && <button type="button" className="bouton discret" onClick={() => setMode('oubli')}>Mot de passe oublié</button>}
+        {retourPossible && <a className="bouton discret" href="/">Continuer sans connexion</a>}
       </div>
     </div>
   );

@@ -2,13 +2,15 @@ import { distance, normaliser } from '../domaine/texte';
 import type { Eleve, TypeObservation } from '../domaine/types';
 
 export type Resultat =
-  | { sorte: 'action'; eleveIds: string[]; typeId: string }
-  | { sorte: 'choix'; texte: string; eleves: { entendu: string; candidats: string[] }[]; eleveIds: string[]; types: string[] }
+  /** `ignores` : mots et nombres entendus qui n'ont désigné personne, à montrer au professeur. */
+  | { sorte: 'action'; eleveIds: string[]; typeId: string; ignores: string[] }
+  | { sorte: 'choix'; texte: string; eleves: { entendu: string; candidats: string[] }[]; eleveIds: string[]; types: string[]; ignores: string[] }
   | { sorte: 'incompris'; texte: string };
 
 const MOTS_VIDES = new Set([
   'numero', 'numeros', 'n', 'no', 'le', 'la', 'les', 'l', 'et', 'pour', 'a', 'est', 'sont', 'eleve', 'eleves',
   'un', 'une', 'de', 'des', 'du', 'd', 'au', 'aux', 'avec', 'alors', 'donc', 'puis', 'aussi', 'ont', 'en',
+  'sans', 'pas', 'plus', 'moins', 'tres', 'encore', 'fois', 'minute', 'minutes', 'il', 'elle', 'ils', 'elles', 'qui', 'que', 'y', 'ce', 'cet', 'cette',
 ]);
 const UNITES: Record<string, number> = {
   un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10,
@@ -85,24 +87,36 @@ export function interpreter(texte: string, eleves: Eleve[], types: TypeObservati
   const toutes = classe.map(formes);
   const mots = observation.reste.split(' ').filter(Boolean);
 
+  const estNombre = (m: string) => /^\d+$/.test(m);
+  // Un nombre nu ne désigne un élève que si la phrase ne nomme personne (« absents 4, 17 et 23 ») ;
+  // sinon il faut l'avoir annoncé par « numéro » (« Omar en retard de dix minutes » ne vise pas le n° 10).
+  const sansNom = mots.every((m) => estNombre(m) || MOTS_VIDES.has(m));
+
   const surs: string[] = [];
   const ambigus: { entendu: string; candidats: string[] }[] = [];
+  const ignores: string[] = [];
   const ajouter = (id: string) => { if (!surs.includes(id)) surs.push(id); };
+  let apresNumero = false;
 
   for (let i = 0; i < mots.length; ) {
     const m = mots[i];
-    if (/^\d+$/.test(m)) {
-      const e = classe.find((x) => x.numero === Number(m));
-      if (!e) return incompris;
-      ajouter(e.id);
+    if (estNombre(m)) {
+      if (!sansNom && !apresNumero) { ignores.push(m); i += 1; continue; }
+      const candidats = classe.filter((x) => x.numero === Number(m)).map((x) => x.id);
+      if (!candidats.length) return incompris;
+      if (candidats.length === 1) ajouter(candidats[0]);
+      else ambigus.push({ entendu: m, candidats });
       i += 1;
       continue;
     }
+    if (INTRODUIT_UN_NUMERO.has(m)) { apresNumero = true; i += 1; continue; }
+    if (m !== 'et') apresNumero = false;
+
     // Plus longue suite de mots qui désigne exactement au moins un élève.
     let trouve = false;
     for (let longueur = Math.min(4, mots.length - i); longueur >= 1 && !trouve; longueur--) {
       const suite = mots.slice(i, i + longueur);
-      if (suite.some((x) => /^\d+$/.test(x))) continue;
+      if (suite.some(estNombre)) continue;
       if (longueur === 1 && MOTS_VIDES.has(m)) break;
       const entendu = suite.join(' ');
       const candidats = toutes.filter((f) => f.exactes.has(entendu)).map((f) => f.id);
@@ -114,26 +128,24 @@ export function interpreter(texte: string, eleves: Eleve[], types: TypeObservati
     }
     if (trouve) continue;
     if (!MOTS_VIDES.has(m)) {
-      // Mot proche d'un prénom ou d'un nom : tolérance selon la longueur.
+      // Mot proche d'un prénom ou d'un nom : jamais appliqué d'office, toujours proposé.
       const tolerance = m.length >= 7 ? 2 : m.length >= 4 ? 1 : 0;
-      if (tolerance) {
-        let min = tolerance + 1;
-        let candidats: string[] = [];
-        for (const f of toutes) {
-          const d = Math.min(...[...f.mots].map((x) => distance(m, x)), Infinity);
-          if (d < min) { min = d; candidats = [f.id]; }
-          else if (d === min && d <= tolerance) candidats.push(f.id);
-        }
-        if (candidats.length === 1) ajouter(candidats[0]);
-        else if (candidats.length > 1) ambigus.push({ entendu: m, candidats });
+      let min = tolerance + 1;
+      let candidats: string[] = [];
+      for (const f of toutes) {
+        const d = Math.min(...[...f.mots].map((x) => distance(m, x)), Infinity);
+        if (d < min) { min = d; candidats = [f.id]; }
+        else if (d === min && d <= tolerance) candidats.push(f.id);
       }
+      if (tolerance && candidats.length) ambigus.push({ entendu: m, candidats });
+      else ignores.push(m);
     }
     i += 1;
   }
 
   if (!surs.length && !ambigus.length) return incompris;
-  if (!ambigus.length && observation.ids.length === 1) return { sorte: 'action', eleveIds: surs, typeId: observation.ids[0] };
-  return { sorte: 'choix', texte, eleves: ambigus, eleveIds: surs, types: observation.ids };
+  if (!ambigus.length && observation.ids.length === 1) return { sorte: 'action', eleveIds: surs, typeId: observation.ids[0], ignores };
+  return { sorte: 'choix', texte, eleves: ambigus, eleveIds: surs, types: observation.ids, ignores };
 }
 
 function chiffrerTexte(normalise: string): string {
