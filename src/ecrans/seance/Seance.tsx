@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import EnTete from '../../composants/EnTete';
 import type { Classe, Critere, Eleve, Observation, Seance as S, TypeObservation } from '../../domaine/types';
@@ -31,11 +31,14 @@ export default function Seance() {
 
   // Le dernier choix Liste ou Plan est mémorisé par classe.
   const classeId = seance?.classe_id;
+  // Un choix fait à l'écran l'emporte sur la valeur mémorisée, même si celle-ci arrive après.
+  const vueChoisie = useRef(false);
   useEffect(() => {
-    if (classeId) lireMeta(`vue:${classeId}`).then((v) => setVue(v === 'plan' ? 'plan' : 'liste'));
+    if (classeId) lireMeta(`vue:${classeId}`).then((v) => { if (!vueChoisie.current && v === 'plan') setVue('plan'); });
   }, [classeId]);
   function changerVue() {
     const suivante = vue === 'liste' ? 'plan' : 'liste';
+    vueChoisie.current = true;
     setVue(suivante);
     if (classeId) ecrireMeta(`vue:${classeId}`, suivante);
   }

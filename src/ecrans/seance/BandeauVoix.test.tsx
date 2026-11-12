@@ -2,7 +2,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, vi } from 'vitest';
-import type { Classe, Eleve, Observation, Seance as S } from '../../domaine/types';
+import type { Classe, Eleve, Observation, Seance as S, TypeObservation } from '../../domaine/types';
 import { enregistrer, initialiser, lister, viderBase } from '../../stockage/depot';
 import * as ecoute from '../../voix/ecoute';
 import Seance from './Seance';
@@ -95,7 +95,7 @@ test('une observation ajoutée après le début de l’écoute est comprise', as
   afficher();
   await parler('silence');
   await userEvent.click(await screen.findByRole('button', { name: 'Fermer' }));
-  await enregistrer('types_observation', { critere: 'discipline', libelle: 'Chewing-gum', points: -1, ordre: 99, masque: false, synonymes: [], code: null });
+  await enregistrer<TypeObservation>('types_observation', { critere: 'discipline', libelle: 'Chewing-gum', points: -1, ordre: 99, masque: false, synonymes: [], code: null });
   await screen.findByRole('button', { name: /BENNANI/ });
   await new Promise((r) => setTimeout(r, 50));
   dire('Salma chewing-gum');
