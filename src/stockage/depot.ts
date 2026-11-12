@@ -10,6 +10,13 @@ export function nouvelId(): string {
 const EPOQUE = '1970-01-01T00:00:00.000Z';
 const idDepart = (famille: number, n: number) => `00000000-0000-4000-8000-${String(famille).padStart(4, '0')}${String(n).padStart(8, '0')}`;
 
+let dernierHorodatage = 0;
+/** Horodatage strictement croissant sur cet appareil, pour distinguer deux écritures de la même milliseconde. */
+function maintenantIso(): string {
+  dernierHorodatage = Math.max(Date.now(), dernierHorodatage + 1);
+  return new Date(dernierHorodatage).toISOString();
+}
+
 const abonnes = new Set<() => void>();
 /** Appelle `rappel` après chaque écriture locale. Renvoie la fonction de désabonnement. */
 export function abonnerEcritures(rappel: () => void): () => void {
@@ -19,7 +26,7 @@ export function abonnerEcritures(rappel: () => void): () => void {
 const prevenir = () => abonnes.forEach((r) => r());
 
 export async function enregistrer<T extends Base>(table: NomTable, ligne: Omit<T, keyof Base> & Partial<Base>): Promise<T> {
-  const complete = { deleted: false, ...ligne, id: ligne.id ?? nouvelId(), updated_at: new Date().toISOString() } as unknown as T;
+  const complete = { deleted: false, ...ligne, id: ligne.id ?? nouvelId(), updated_at: maintenantIso() } as unknown as T;
   await base.transaction('rw', base[table], base.file_attente, async () => {
     await base[table].put(complete);
     await base.file_attente.put({ cle: `${table}:${complete.id}`, table, id: complete.id });
