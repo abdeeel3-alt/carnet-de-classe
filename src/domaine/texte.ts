@@ -24,3 +24,8 @@ export function distance(a: string, b: string): number {
   }
   return precedente[b.length];
 }
+
+/** Nombre avec son signe : « +2 », « −1 » (vrai signe moins), « 0 ». */
+export function signe(n: number): string {
+  return n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0';
+}

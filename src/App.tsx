@@ -4,11 +4,13 @@ import BarreNavigation from './composants/BarreNavigation';
 import Accueil from './ecrans/Accueil';
 import Connexion from './ecrans/Connexion';
 import EmploiDuTemps from './ecrans/EmploiDuTemps';
+import Catalogue from './ecrans/reglages/Catalogue';
 import Classes from './ecrans/reglages/Classes';
 import Eleves from './ecrans/reglages/Eleves';
 import ImportEleves from './ecrans/reglages/ImportEleves';
 import Parametres from './ecrans/reglages/Parametres';
 import Reglages from './ecrans/reglages/Reglages';
+import Seance from './ecrans/seance/Seance';
 import { ecrireMeta, initialiser, lireMeta, viderBase } from './stockage/depot';
 import { client, distantSupabase } from './stockage/distant';
 import { demarrerSynchro } from './stockage/synchro';
@@ -25,6 +27,8 @@ export function Ecrans() {
         <Route path="/emploi-du-temps" element={<EmploiDuTemps />} />
         <Route path="/reglages" element={<Reglages />} />
       </Route>
+      <Route path="/seance/:id" element={<Seance />} />
+      <Route path="/reglages/catalogue" element={<Catalogue />} />
       <Route path="/reglages/classes" element={<Classes />} />
       <Route path="/reglages/classes/:id" element={<Eleves />} />
       <Route path="/reglages/classes/:id/import" element={<ImportEleves />} />
