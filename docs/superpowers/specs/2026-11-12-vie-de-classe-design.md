@@ -22,7 +22,6 @@ Ce document couvre le module 1. Deux autres modules suivront, chacun avec son pr
 
 - Comptes élèves ou parents, envoi de messages aux parents.
 - Notes, devoirs et contrôles (module 2).
-- Emploi du temps automatique : la séance est ouverte à la main en touchant la classe.
 - Interface en arabe.
 
 ## 2. Décisions prises
@@ -40,14 +39,26 @@ Ce document couvre le module 1. Deux autres modules suivront, chacun avec son pr
 | Badges et sanctions | Proposés aux seuils fixés, validés par le professeur ; attribution manuelle possible |
 | Listes d'options | Extensibles par le professeur à tout moment |
 | Fiche élève | Détaillée, sur une période au choix |
+| Emploi du temps | Hebdomadaire, saisi par le professeur ; l'application propose la séance en cours |
+| Exports Excel | Mis en forme et prêts à imprimer en A4 |
 
 ## 3. Écrans
 
 ### 3.1 Accueil
 
-- Une carte par classe (nom, niveau, effectif).
-- Toucher une carte ouvre la séance du jour pour cette classe. Si une séance a déjà été ouverte pour cette classe dans les 2 dernières heures, elle est reprise ; sinon une nouvelle séance est créée.
-- Accès aux réglages et à l'indicateur de synchronisation.
+- En haut, la **séance en cours ou la prochaine** d'après l'emploi du temps (classe, horaire, salle), avec un gros bouton « Démarrer ». Un seul geste suffit pour commencer.
+- En dessous, les séances du jour dans l'ordre, puis une carte par classe (nom, niveau, effectif).
+- Toucher une classe hors emploi du temps ouvre aussi une séance (rattrapage, soutien, changement d'horaire).
+- Si une séance existe déjà pour cette classe sur le créneau en cours, ou a été ouverte dans les 2 dernières heures, elle est reprise ; sinon une nouvelle séance est créée.
+- Accès à l'emploi du temps de la semaine, aux réglages et à l'indicateur de synchronisation.
+
+### 3.1.1 Emploi du temps
+
+- Grille hebdomadaire, du lundi au samedi, affichée par jour sur téléphone et en semaine entière sur tablette ou ordinateur.
+- Un créneau comporte : jour, heure de début, heure de fin, classe, salle (facultative).
+- Ajout, modification et suppression d'un créneau par un formulaire à listes d'options ; duplication d'un créneau vers un autre jour.
+- L'emploi du temps est le même chaque semaine. Les exceptions (séance déplacée, rattrapage) se gèrent en ouvrant la séance à la main depuis la classe.
+- Les jours fériés et les vacances ne sont pas gérés dans ce module : un créneau sans séance ouverte ne produit simplement aucune donnée.
 
 ### 3.2 Séance
 
@@ -96,8 +107,10 @@ Ce document couvre le module 1. Deux autres modules suivront, chacun avec son pr
 - **Plan de classe** : grille de rangées et de tables ; placement des élèves par glisser-déposer.
 - **Catalogue d'observations** : ajouter, renommer, réordonner, masquer ; régler les points.
 - **Badges et sanctions** : créer les règles et leurs seuils.
+- **Emploi du temps** : les créneaux de la semaine (section 3.1.1).
 - **Semestres** : dates de début et de fin des deux semestres.
-- **Export** : toutes les données en un fichier Excel.
+- **En-tête des documents** : établissement, nom du professeur, matière.
+- **Exports Excel** : voir section 6.1.
 
 ## 4. Points, badges et sanctions
 
@@ -166,6 +179,29 @@ Les trois modes aboutissent au même écran d'**aperçu** : un tableau numéro, 
 
 Les noms en caractères latins sont attendus. La lecture de photos en caractères arabes n'est pas garantie dans cette version.
 
+## 6.1 Exports Excel
+
+Chaque export est un fichier .xlsx mis en forme, imprimable tel quel sur du papier A4, sans retouche.
+
+Exports proposés, chacun pour une classe et une période au choix :
+
+| Export | Contenu |
+|---|---|
+| Liste de classe | Numéro, nom, prénom, colonnes vides pour un usage papier |
+| Registre de présence | Une ligne par élève, une colonne par séance, absences et retards marqués, totaux |
+| Bilan de comportement | Une ligne par élève : points par critère, total, absences, retards, badges, sanctions |
+| Fiche élève | Le détail d'un élève sur la période (même contenu que l'écran) |
+| Emploi du temps | La grille de la semaine |
+| Sauvegarde complète | Toutes les données, une feuille par table, pour archivage |
+
+Mise en forme commune (sauf la sauvegarde complète, qui est brute) :
+
+- Format A4, portrait ou paysage selon le tableau, marges réglées, contenu ajusté à la largeur d'une page.
+- En-tête : établissement, professeur, matière, classe, année scolaire, période.
+- Titres de colonnes en gras sur fond grisé, répétés en haut de chaque page imprimée ; bordures sur toutes les cellules ; largeurs de colonnes adaptées au contenu.
+- Pied de page : date d'édition et numéro de page.
+- Lisible en noir et blanc : aucune information ne repose sur la seule couleur.
+
 ## 7. Données
 
 Toutes les tables portent l'identifiant du professeur ; la base refuse tout accès aux lignes d'un autre compte (sécurité au niveau des lignes).
@@ -174,12 +210,13 @@ Toutes les tables portent l'identifiant du professeur ; la base refuse tout acc�
 |---|---|
 | `classes` | nom, niveau (2AC ou 3AC), année scolaire, archivée, dimensions du plan de classe |
 | `eleves` | classe, numéro, nom, prénom, rangée et colonne dans le plan, remarques |
-| `seances` | classe, date et heure de début, terminée |
+| `seances` | classe, créneau (facultatif), date et heure de début, terminée |
 | `types_observation` | critère, libellé, points, ordre, masqué, synonymes vocaux |
 | `observations` | séance, élève, type d'observation, points au moment de la saisie, heure, supprimée |
+| `creneaux` | jour de la semaine, heure de début, heure de fin, classe, salle |
 | `regles` | nom, type (badge ou sanction), critère ou compteur, seuil, période |
 | `attributions` | élève, règle ou libellé libre, date, état (proposée, validée, refusée), période concernée |
-| `parametres` | dates des semestres, préférences d'affichage |
+| `parametres` | dates des semestres, établissement, nom du professeur, matière, préférences d'affichage |
 
 Les points sont copiés dans chaque observation au moment de la saisie : modifier plus tard la valeur d'une observation du catalogue ne change pas le passé.
 
@@ -198,7 +235,7 @@ Les points sont copiés dans chaque observation au moment de la saisie : modifie
 - **Serveur** : Supabase (base PostgreSQL, authentification par e-mail et mot de passe, sécurité au niveau des lignes).
 - **Voix** : Web Speech API de Chrome.
 - **Lecture de photos** : reconnaissance de texte exécutée dans le navigateur.
-- **Excel** : lecture et écriture dans le navigateur.
+- **Excel** : lecture et écriture dans le navigateur, avec une bibliothèque qui gère les styles et la mise en page d'impression.
 - **Hébergement** : hébergement statique gratuit.
 
 Découpage en unités indépendantes, chacune testable seule :
@@ -211,9 +248,11 @@ Découpage en unités indépendantes, chacune testable seule :
 | `import` | Transforme un fichier Excel, un texte lu sur photo ou une saisie en liste d'élèves |
 | `stockage` | Base locale, file d'attente, synchronisation |
 | `periodes` | Convertit un choix de période en dates, selon les semestres réglés |
+| `emploi-du-temps` | Détermine la séance en cours et les séances du jour à partir des créneaux et de l'heure |
+| `export` | Construit les fichiers Excel mis en forme à partir des données et des totaux |
 | Écrans | Affichent et appellent les unités ci-dessus, sans logique de calcul |
 
-`points`, `regles`, `voix/interpreteur`, `import` et `periodes` sont des fonctions pures : elles ne dépendent ni de l'écran ni du réseau.
+`points`, `regles`, `voix/interpreteur`, `import`, `periodes`, `emploi-du-temps` et `export` sont des fonctions pures : elles ne dépendent ni de l'écran ni du réseau.
 
 ## 10. Erreurs et cas limites
 
@@ -226,20 +265,20 @@ Découpage en unités indépendantes, chacune testable seule :
 
 ## 11. Tests
 
-- **Automatiques** sur les unités pures : calcul des points, périodes, seuils des règles, interprétation de phrases dictées (y compris fautes de transcription et homonymes), import de fichiers Excel de formes variées.
+- **Automatiques** sur les unités pures : calcul des points, périodes, seuils des règles, interprétation de phrases dictées (y compris fautes de transcription et homonymes), import de fichiers Excel de formes variées, séance en cours selon l'emploi du temps, contenu et mise en page des exports (format A4, orientation, titres répétés, ajustement à la largeur).
 - **Automatiques** sur la synchronisation : saisie hors ligne puis reprise, deux appareils.
 - **De bout en bout** dans un navigateur simulant un téléphone Android : créer une classe, importer une liste, faire une séance, valider un badge, consulter une fiche sur une période.
-- **À faire sur le téléphone du professeur** (non automatisable ici) : voix réelle en classe, appareil photo, installation sur l'écran d'accueil. Une liste d'essais de cinq minutes sera fournie.
+- **À faire sur le téléphone du professeur** (non automatisable ici) : voix réelle en classe, appareil photo, installation sur l'écran d'accueil, impression réelle d'un export sur papier A4. Une liste d'essais de cinq minutes sera fournie.
 
 ## 12. Livraison
 
 Par étapes, chacune utilisable :
 
-1. Connexion, classes, élèves, import des listes.
+1. Connexion, classes, élèves, import des listes, emploi du temps.
 2. Écran Séance au doigt : présence, observations, points, + Autre, annulation, sélection multiple.
 3. Plan de classe, règles, badges et sanctions, résumé de fin de séance, fiche élève par période.
 4. Commande vocale.
-5. Export Excel, impression de la fiche, finitions.
+5. Exports Excel mis en forme A4, impression de la fiche, finitions.
 
 Deux comptes sont à créer au nom du professeur avant la mise en ligne : Supabase (données) et un hébergeur (application). Les deux sont gratuits à cette échelle.
 
