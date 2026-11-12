@@ -1,6 +1,6 @@
 import { attribution, local, obs, parametresTest as p, regle } from './fabriques-test';
 import { totauxVides, type Totaux } from './points';
-import { atteint, proposer } from './regles';
+import { atteint, decrireRegle, proposer, seuilSigne } from './regles';
 import type { Critere } from './types';
 
 const totaux = (c: Partial<Record<Critere, number>>): Totaux => {
@@ -63,5 +63,24 @@ describe('proposer', () => {
   });
   test('ignore les règles supprimées', () => {
     expect(proposer([{ ...avertissement, deleted: true }], cinqBavardages, [], jeudi, p)).toEqual([]);
+  });
+});
+
+describe('seuilSigne', () => {
+  test('sanction sur un critère ou sur le total : seuil négatif', () => {
+    expect(seuilSigne('sanction', 'discipline', 5)).toBe(-5);
+    expect(seuilSigne('sanction', 'total', -8)).toBe(-8);
+  });
+  test('badge, ou compteur d’absences et de retards : seuil positif', () => {
+    expect(seuilSigne('badge', 'participation', 10)).toBe(10);
+    expect(seuilSigne('badge', 'total', -10)).toBe(10);
+    expect(seuilSigne('sanction', 'retards', 3)).toBe(3);
+    expect(seuilSigne('sanction', 'absences', -2)).toBe(2);
+  });
+  test('description lisible', () => {
+    expect(decrireRegle(regle({ type: 'sanction', cible: 'discipline', seuil: -5, periode: 'mois' }))).toBe('−5 en Discipline sur le mois');
+    expect(decrireRegle(regle({ type: 'sanction', cible: 'retards', seuil: 3, periode: 'mois' }))).toBe('3 retards sur le mois');
+    expect(decrireRegle(regle({ type: 'badge', cible: 'total', seuil: 20, periode: 'semestre' }))).toBe('+20 au total sur le semestre');
+    expect(decrireRegle(regle({ type: 'sanction', cible: 'absences', seuil: 1, periode: 'semaine' }))).toBe('1 absence sur la semaine');
   });
 });

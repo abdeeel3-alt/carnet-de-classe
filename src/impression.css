@@ -1,0 +1,13 @@
+.impression-seule { display: none; }
+
+@media print {
+  @page { size: A4 portrait; margin: 12mm; }
+  :root { background: #fff; font-size: 12px; }
+  body { background: #fff; }
+  .entete, .barre, .barre-seance, .sans-impression, .voile { display: none !important; }
+  .impression-seule { display: block; }
+  .appli { max-width: none; }
+  .contenu { padding: 0; gap: 8px; }
+  .carte, .liste { border-color: #94a3b8; break-inside: avoid; }
+  .total, .pastille, .etiquette { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

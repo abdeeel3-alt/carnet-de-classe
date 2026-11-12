@@ -37,3 +37,24 @@ export function proposer(regles: Regle[], observations: Observation[], existante
   }
   return propositions;
 }
+
+const CRITERES_REGLE = ['presence', 'reglement', 'participation', 'discipline', 'serieux', 'total'];
+
+/** Signe du seuil d'après la règle : négatif pour une sanction sur des points, positif sinon. */
+export function seuilSigne(type: Regle['type'], cible: Regle['cible'], valeur: number): number {
+  const v = Math.abs(Math.round(valeur));
+  return type === 'sanction' && CRITERES_REGLE.includes(cible) ? -v : v;
+}
+
+const NOM_CIBLE: Record<Regle['cible'], string> = {
+  presence: 'en Présence', reglement: 'en Règlement', participation: 'en Participation', discipline: 'en Discipline',
+  serieux: 'en Sérieux', total: 'au total', absences: 'absence', retards: 'retard',
+};
+const NOM_PERIODE: Record<Regle['periode'], string> = { semaine: 'sur la semaine', mois: 'sur le mois', semestre: 'sur le semestre' };
+
+/** « −5 en Discipline sur le mois », « 3 retards sur le mois ». */
+export function decrireRegle(r: Regle): string {
+  if (r.cible === 'absences' || r.cible === 'retards') return `${r.seuil} ${NOM_CIBLE[r.cible]}${r.seuil > 1 ? 's' : ''} ${NOM_PERIODE[r.periode]}`;
+  const seuil = r.seuil > 0 ? `+${r.seuil}` : r.seuil < 0 ? `−${Math.abs(r.seuil)}` : '0';
+  return `${seuil} ${NOM_CIBLE[r.cible]} ${NOM_PERIODE[r.periode]}`;
+}

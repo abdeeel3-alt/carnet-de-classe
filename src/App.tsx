@@ -10,8 +10,11 @@ import Eleves from './ecrans/reglages/Eleves';
 import ImportEleves from './ecrans/reglages/ImportEleves';
 import Parametres from './ecrans/reglages/Parametres';
 import PlanDeClasse from './ecrans/reglages/PlanDeClasse';
+import Regles from './ecrans/reglages/Regles';
 import Reglages from './ecrans/reglages/Reglages';
+import ResumeSeance from './ecrans/seance/ResumeSeance';
 import Seance from './ecrans/seance/Seance';
+import FicheEleve from './ecrans/eleve/FicheEleve';
 import { ecrireMeta, initialiser, lireMeta, viderBase } from './stockage/depot';
 import { client, distantSupabase } from './stockage/distant';
 import { demarrerSynchro } from './stockage/synchro';
@@ -29,6 +32,9 @@ export function Ecrans() {
         <Route path="/reglages" element={<Reglages />} />
       </Route>
       <Route path="/seance/:id" element={<Seance />} />
+      <Route path="/seance/:id/resume" element={<ResumeSeance />} />
+      <Route path="/eleve/:id" element={<FicheEleve />} />
+      <Route path="/reglages/regles" element={<Regles />} />
       <Route path="/reglages/catalogue" element={<Catalogue />} />
       <Route path="/reglages/classes" element={<Classes />} />
       <Route path="/reglages/classes/:id" element={<Eleves />} />
