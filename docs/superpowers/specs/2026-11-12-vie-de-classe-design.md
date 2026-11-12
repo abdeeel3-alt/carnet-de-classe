@@ -198,9 +198,14 @@ Mise en forme commune (sauf la sauvegarde complète, qui est brute) :
 
 - Format A4, portrait ou paysage selon le tableau, marges réglées, contenu ajusté à la largeur d'une page.
 - En-tête : établissement, professeur, matière, classe, année scolaire, période.
-- Titres de colonnes en gras sur fond grisé, répétés en haut de chaque page imprimée ; bordures sur toutes les cellules ; largeurs de colonnes adaptées au contenu.
+- Titres de colonnes en gras, texte blanc sur fond de couleur, répétés en haut de chaque page imprimée ; bordures sur toutes les cellules ; largeurs de colonnes adaptées au contenu.
 - Pied de page : date d'édition et numéro de page.
-- Lisible en noir et blanc : aucune information ne repose sur la seule couleur.
+- Mise en forme en couleurs :
+  - Bandeau de titre coloré en haut du document ; une couleur d'accent par critère (Présence, Règlement, Participation, Discipline, Sérieux), la même que dans l'application.
+  - Lignes alternées légèrement teintées pour faciliter la lecture.
+  - Vert pour les points positifs et les badges, rouge pour les points négatifs et les sanctions, orange pour les retards, rouge pour les absences.
+  - Totaux et moyennes sur fond coloré plus soutenu.
+- Chaque information colorée est aussi écrite en clair (signe + ou −, lettre A ou R, libellé), de sorte que le document reste compréhensible s'il est imprimé ou photocopié en noir et blanc.
 
 ## 7. Données
 
@@ -265,7 +270,7 @@ Découpage en unités indépendantes, chacune testable seule :
 
 ## 11. Tests
 
-- **Automatiques** sur les unités pures : calcul des points, périodes, seuils des règles, interprétation de phrases dictées (y compris fautes de transcription et homonymes), import de fichiers Excel de formes variées, séance en cours selon l'emploi du temps, contenu et mise en page des exports (format A4, orientation, titres répétés, ajustement à la largeur).
+- **Automatiques** sur les unités pures : calcul des points, périodes, seuils des règles, interprétation de phrases dictées (y compris fautes de transcription et homonymes), import de fichiers Excel de formes variées, séance en cours selon l'emploi du temps, contenu et mise en page des exports (format A4, orientation, titres répétés, ajustement à la largeur, couleurs appliquées).
 - **Automatiques** sur la synchronisation : saisie hors ligne puis reprise, deux appareils.
 - **De bout en bout** dans un navigateur simulant un téléphone Android : créer une classe, importer une liste, faire une séance, valider un badge, consulter une fiche sur une période.
 - **À faire sur le téléphone du professeur** (non automatisable ici) : voix réelle en classe, appareil photo, installation sur l'écran d'accueil, impression réelle d'un export sur papier A4. Une liste d'essais de cinq minutes sera fournie.
