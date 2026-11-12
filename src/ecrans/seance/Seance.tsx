@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import EnTete from '../../composants/EnTete';
 import type { Classe, Critere, Eleve, Observation, Seance as S, TypeObservation } from '../../domaine/types';
+import { ecrireMeta, lireMeta } from '../../stockage/depot';
 import { useLigne, useListe } from '../../stockage/hooks';
 import { annulerDerniereAction, basculerPresence, marquerPresence, observer } from './actions';
 import ListeEleves from './ListeEleves';
 import { parEleve } from './marques';
 import NouvelleObservation from './NouvelleObservation';
 import PanneauObservations from './PanneauObservations';
+import PlanEleves from './PlanEleves';
 
 export default function Seance() {
   const { id: seanceId = '' } = useParams();
@@ -22,6 +24,18 @@ export default function Seance() {
   /** Élèves visés par le panneau ouvert. */
   const [cibles, setCibles] = useState<string[] | null>(null);
   const [autre, setAutre] = useState<Critere | null>(null);
+  const [vue, setVue] = useState<'liste' | 'plan'>('liste');
+
+  // Le dernier choix Liste ou Plan est mémorisé par classe.
+  const classeId = seance?.classe_id;
+  useEffect(() => {
+    if (classeId) lireMeta(`vue:${classeId}`).then((v) => setVue(v === 'plan' ? 'plan' : 'liste'));
+  }, [classeId]);
+  function changerVue() {
+    const suivante = vue === 'liste' ? 'plan' : 'liste';
+    setVue(suivante);
+    if (classeId) ecrireMeta(`vue:${classeId}`, suivante);
+  }
 
   const tries = useMemo(() => [...(eleves ?? [])].sort((a, b) => a.numero - b.numero), [eleves]);
   const obsParEleve = useMemo(() => parEleve(observations ?? []), [observations]);
@@ -36,6 +50,8 @@ export default function Seance() {
     if (!suivante.delete(e.id)) suivante.add(e.id);
     setSelection(suivante);
   }
+
+  const appuiLong = (e: Eleve) => setSelection(new Set([...(selection ?? []), e.id]));
 
   async function choisir(type: TypeObservation) {
     const ids = cibles!;
@@ -53,6 +69,7 @@ export default function Seance() {
   return (
     <>
       <EnTete titre={classe?.nom ?? '…'} sousTitre={sousTitre} retour="/">
+        <button type="button" className="texte" onClick={changerVue}>{vue === 'liste' ? 'Plan' : 'Liste'}</button>
         <button type="button" className="texte" onClick={() => setSelection(selection ? null : new Set())}>{selection ? 'Terminé' : 'Sélectionner'}</button>
       </EnTete>
 
@@ -72,8 +89,10 @@ export default function Seance() {
             <Link className="bouton primaire" to={`/reglages/classes/${seance?.classe_id}`}>Ajouter des élèves</Link>
           </div>
         )}
-        <ListeEleves eleves={tries} observations={obsParEleve} selection={selection} onToucher={toucher}
-          onAppuiLong={(e) => setSelection(new Set([...(selection ?? []), e.id]))} />
+        {vue === 'plan' && classe
+          ? <PlanEleves eleves={tries} observations={obsParEleve} selection={selection} onToucher={toucher} onAppuiLong={appuiLong}
+              rangees={classe.plan_rangees} colonnes={classe.plan_colonnes} />
+          : <ListeEleves eleves={tries} observations={obsParEleve} selection={selection} onToucher={toucher} onAppuiLong={appuiLong} />}
       </div>
 
       <div className="barre-seance">

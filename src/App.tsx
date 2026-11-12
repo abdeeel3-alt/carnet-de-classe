@@ -9,6 +9,7 @@ import Classes from './ecrans/reglages/Classes';
 import Eleves from './ecrans/reglages/Eleves';
 import ImportEleves from './ecrans/reglages/ImportEleves';
 import Parametres from './ecrans/reglages/Parametres';
+import PlanDeClasse from './ecrans/reglages/PlanDeClasse';
 import Reglages from './ecrans/reglages/Reglages';
 import Seance from './ecrans/seance/Seance';
 import { ecrireMeta, initialiser, lireMeta, viderBase } from './stockage/depot';
@@ -32,6 +33,7 @@ export function Ecrans() {
       <Route path="/reglages/classes" element={<Classes />} />
       <Route path="/reglages/classes/:id" element={<Eleves />} />
       <Route path="/reglages/classes/:id/import" element={<ImportEleves />} />
+      <Route path="/reglages/classes/:id/plan" element={<PlanDeClasse />} />
       <Route path="/reglages/parametres" element={<Parametres />} />
     </Routes>
   );
